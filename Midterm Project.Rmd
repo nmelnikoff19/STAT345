@@ -1,0 +1,177 @@
+---
+title: "STAT345 Midterm: Nate Melnikoff"
+output: html_document
+date: "2024-03-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# STAT345 Mid-Term Project
+
+##### Nate Melnikoff
+
+-   I am going to be working for the Milwaukee Bucks on this project. I am comparing the 2013 season to the most recent 2023 season. My goal here is to compare these two seasons and see what we can find in terms of how the game has changed.
+-   First, we need a court to look at.
+
+```{r message=FALSE, warning=FALSE}
+library(ggplot2)
+
+court <- ggplot(data=data.frame(x=1,y=1),aes(x,y))+
+  ###outside box:
+  geom_path(data=data.frame(x=c(-25,-25,25,25,-25),y=c(0,47,47,0,0)))+
+  ###solid FT semicircle above FT line:
+  geom_path(data=data.frame(x=c(-6000:(-1)/1000,1:6000/1000),y=c(19+sqrt(6^2-c(-6000:(-1)/1000,1:6000/1000)^2))),aes(x=x,y=y))+
+  ###dashed FT semicircle below FT line:
+  geom_path(data=data.frame(x=c(-6000:(-1)/1000,1:6000/1000),y=c(19-sqrt(6^2-c(-6000:(-1)/1000,1:6000/1000)^2))),aes(x=x,y=y),linetype='dashed')+
+  ###key:
+  geom_path(data=data.frame(x=c(-8,-8,8,8,-8),y=c(0,19,19,0,0)))+
+  ###box inside the key:
+  geom_path(data=data.frame(x=c(-6,-6,6,6,-6),y=c(0,19,19,0,0)))+
+  ###restricted area semicircle:
+  geom_path(data=data.frame(x=c(-4000:(-1)/1000,1:4000/1000),y=c(5.25+sqrt(4^2-c(-4000:(-1)/1000,1:4000/1000)^2))),aes(x=x,y=y))+
+  ###halfcourt semicircle:
+  geom_path(data=data.frame(x=c(-6000:(-1)/1000,1:6000/1000),y=c(47-sqrt(6^2-c(-6000:(-1)/1000,1:6000/1000)^2))),aes(x=x,y=y))+
+  ###rim:
+  geom_path(data=data.frame(x=c(-750:(-1)/1000,1:750/1000,750:1/1000,-1:-750/1000),y=c(c(5.25+sqrt(0.75^2-c(-750:(-1)/1000,1:750/1000)^2)),c(5.25-sqrt(0.75^2-c(750:1/1000,-1:-750/1000)^2)))),aes(x=x,y=y))+
+  ###backboard:
+  geom_path(data=data.frame(x=c(-3,3),y=c(4,4)),lineend='butt')+
+  ###three-point line:
+  geom_path(data=data.frame(x=c(-22,-22,-22000:(-1)/1000,1:22000/1000,22,22),y=c(0,169/12,5.25+sqrt(23.75^2-c(-22000:(-1)/1000,1:22000/1000)^2),169/12,0)),aes(x=x,y=y))+
+  ###fix aspect ratio to 1:1
+  coord_fixed()
+
+court
+```
+
+```{r message=FALSE, warning=FALSE}
+##Sub-setting the full season shots of every team to just the Bucks shots for 2013 and 2023.
+library(readxl)
+NBA_2013_Shots <- read_excel("C:/Users/nmeln/Downloads/STAT345/NBA_2014_Shots.xlsx")
+NBA_2018_Shots <- read_excel("C:/Users/nmeln/Downloads/STAT345/NBA_2018_Shots.xlsx")
+NBA_2023_Shots <- read_excel("C:/Users/nmeln/Downloads/STAT345/NBA_2023_Shots.xlsx")
+
+Bucks2013 <- subset(NBA_2013_Shots, TEAM_NAME == "Milwaukee Bucks")
+Bucks2018 <- subset(NBA_2018_Shots, TEAM_NAME == "Milwaukee Bucks")
+Bucks2023 <- subset(NBA_2023_Shots, TEAM_NAME == "Milwaukee Bucks")
+
+```
+
+-   Now that we have our court, let's add the Milwaukee Bucks shots from 2013 and 2023 to them.
+
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+## Taking away shots past half court - assuming these shots are buzzer beater attempts at ends of quarters and are not necessarily needed for this
+
+Bucks2013 <- Bucks2013 %>% filter(LOC_Y <= 47)
+Bucks2018 <- Bucks2018 %>% filter(LOC_Y <= 47)
+Bucks2023 <- Bucks2023 %>% filter(LOC_Y <= 47)
+
+##Adding the scatter plots to my court - making the green dots made shots, red dots missed shots
+
+court + geom_point(data = Bucks2013, aes(x = LOC_X, y = LOC_Y, color = SHOT_MADE)) +
+  scale_color_manual(values = c("TRUE" = "green", "FALSE" = "red")) +
+  labs(x = "Baseline (ft)", y = "Sideline (ft)", title = "Milwaukee Bucks 2013 Shot Chart")
+
+court + geom_point(data = Bucks2018, aes(x = LOC_X, y = LOC_Y, color = SHOT_MADE)) +
+  scale_color_manual(values = c("TRUE" = "green", "FALSE" = "red")) +
+  labs(x = "Baseline (ft)", y = "Sideline (ft)", title = "Milwaukee Bucks 2018 Shot Chart")
+
+court + geom_point(data = Bucks2023, aes(x = LOC_X, y = LOC_Y, color = SHOT_MADE)) +
+  scale_color_manual(values = c("TRUE" = "green", "FALSE" = "red")) +
+  labs(x = "Baseline (ft)", y = "Sideline (ft)", title = "Milwaukee Bucks 2023 Shot Chart")
+
+
+```
+
+-   At first glance, they may look similar but if we dive deeper into them, we can see some interesting changes over 10 years. Let's look at every shot taken in 2013, 2018, and 2023 for the Milwaukee Bucks. We can see here that there are a lot of points on each graph and it may be difficult to understand what these graphs are showing.
+
+-   Green dots are made shots, red dots are missed shots. For this project, we have taken out any shots passed half-court as they are most likely attempts at buzzer-beaters at the end of the quarter and do not accurately portray the Milwaukee Bucks as a whole.
+
+```{r message=FALSE, warning=FALSE}
+library(ggplot2)
+
+court +
+  geom_density_2d(data = Bucks2013, aes(x = LOC_X, y = LOC_Y), bins = 100) +
+  scale_fill_gradient(low = "lightgreen", high = "darkgreen") +
+  labs(x = "Baseline (ft)", y = "Sideline (ft)", title = "Milwaukee Bucks 2013 Shot Heatmap")
+
+court +
+  geom_density_2d(data = Bucks2018, aes(x = LOC_X, y = LOC_Y), bins = 100) +
+  scale_fill_gradient(low = "lightgreen", high = "darkgreen") +
+  labs(x = "Baseline (ft)", y = "Sideline (ft)", title = "Milwaukee Bucks 2018 Shot Heatmap")
+
+court +
+  geom_density_2d(data = Bucks2023, aes(x = LOC_X, y = LOC_Y), bins = 100) +
+  scale_fill_gradient(low = "lightgreen", high = "darkgreen") +
+  labs(x = "Baseline (ft)", y = "Sideline (ft)", title = "Milwaukee Bucks 2023 Shot Heatmap")
+
+```
+
+**Interesting things to note:**
+
+-   Three-point attempts increase every 5 years.
+
+    -   The 2023 team took three-point attempts way beyond the three-point arc as well.
+
+-   Shots under the hoop stayed the same.
+
+-   The 2013 team took shots all over the court, while the 2018 & 2023 teams had more shots taken in the same areas.
+
+-   Team Records:
+
+    -   2013: 15-67
+
+    -   2018: 44-38
+
+    -   2023: 58-24
+
+**Deeper Analysis:**
+
+If we take a deeper look into those four bullet points, we can really understand how the Bucks have changed over 10 years of basketball. To start, in 2013 the Bucks attempted 1,553 three-point shots, the 2018 Bucks took 2,024 three-point shots, while the 2023 Bucks attempted 3,306 three-point shots (**A 212.88% increase from 2013!!).**
+
+As we look at shots underneath the hoop, we can see that layups and easy baskets have not changed in terms of shot selection. Whether this was taken for granted or not, we can see that if a player is given a close shot opportunity, he is going to take it.
+
+Combining the third and fourth bullet points, we are going to look closer at the 2013 team. We can see that there are fewer spots on the floor with a higher density of shot attempts. Interpreting this can be difficult, but here is the answer. The 2013 team only had 15 wins, and had one of the worst offenses in the entire league. They were known for having an extremely weak offensive scheme which led to them taking shots wherever they could get them. Comparing this to the 2023 58-win Bucks or even the 2018 Bucks, you can see multiple places on the floor with a higher density of shots. This is due to Head Coach Mike Budenholzer, whose offense had a lot of very well-run plays that led to shots in the same area at times. As the game of basketball has evolved, more three-point shots have been used and are becoming more useful to offenses. Budenholzer's 2023 Bucks had set plays which led to more open shots, which happened to be more three-point attempts.
+
+**Above and Beyond**
+
+We are now going to look just at Khris Middleton's shot charts for the 2013, 2018, and 2023 seasons.
+
+```{r}
+##Making subsetted data for just Khris Middleton, who was on all three teams.
+Middleton2013 <- subset(Bucks2013, PLAYER_NAME == "Khris Middleton")
+Middleton2018 <- subset(Bucks2018, PLAYER_NAME == "Khris Middleton")
+Middleton2023 <- subset(Bucks2023, PLAYER_NAME == "Khris Middleton")
+
+court +
+  geom_density_2d(data = Middleton2013, aes(x = LOC_X, y = LOC_Y), bins = 75) +
+  scale_fill_gradient(low = "lightgreen", high = "darkgreen") +
+  labs(x = "Baseline (ft)", y = "Sideline (ft)", title = "Khris Middleton 2013 Shot Heatmap")
+
+court +
+  geom_density_2d(data = Middleton2018, aes(x = LOC_X, y = LOC_Y), bins = 75) +
+  scale_fill_gradient(low = "lightgreen", high = "darkgreen") +
+  labs(x = "Baseline (ft)", y = "Sideline (ft)", title = "Khris Middleton 2018 Shot Heatmap")
+
+court +
+  geom_density_2d(data = Middleton2023, aes(x = LOC_X, y = LOC_Y), bins = 75) +
+  scale_fill_gradient(low = "lightgreen", high = "darkgreen") +
+  labs(x = "Baseline (ft)", y = "Sideline (ft)", title = "Khris Middleton 2023 Shot Heatmap")
+
+
+
+```
+
+This can be evident even more by just looking at Khris Middleton's heat map over 10 years.
+
+**By Year:**
+
+-   2013: 3.5 3PA/GM
+
+-   2018: 5.0 3PA/GM
+
+-   2023: 4.9 3PA/GM
+
+Looking at these graphs show that Khris Middleton has taken more three's as each year goes on. His 2023 season was cut short due to injury, but data shows that he would've been around or above 5 3PA/GM. Along with what was said before, the shots are becoming deeper as the offensive schemes are getting better. More open shots are becoming available and players like Khris are taking advantage more often.
