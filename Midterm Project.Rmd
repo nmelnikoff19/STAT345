@@ -46,7 +46,7 @@ court
 ```
 
 ```{r message=FALSE, warning=FALSE}
-##Sub-setting the full season shots of every team to just the Bucks shots for 2013 and 2023.
+##Sub-setting the full season shots of every team to just the Bucks shots for 2013, 2018, and 2023.
 library(readxl)
 NBA_2013_Shots <- read_excel("C:/Users/nmeln/Downloads/STAT345/NBA_2014_Shots.xlsx")
 NBA_2018_Shots <- read_excel("C:/Users/nmeln/Downloads/STAT345/NBA_2018_Shots.xlsx")
@@ -91,6 +91,7 @@ court + geom_point(data = Bucks2023, aes(x = LOC_X, y = LOC_Y, color = SHOT_MADE
 
 ```{r message=FALSE, warning=FALSE}
 library(ggplot2)
+##Making density plots of each season to see which teams shot from each place
 
 court +
   geom_density_2d(data = Bucks2013, aes(x = LOC_X, y = LOC_Y), bins = 100) +
@@ -145,6 +146,7 @@ Middleton2013 <- subset(Bucks2013, PLAYER_NAME == "Khris Middleton")
 Middleton2018 <- subset(Bucks2018, PLAYER_NAME == "Khris Middleton")
 Middleton2023 <- subset(Bucks2023, PLAYER_NAME == "Khris Middleton")
 
+##Making courts again but just for Khris Middleton
 court +
   geom_density_2d(data = Middleton2013, aes(x = LOC_X, y = LOC_Y), bins = 75) +
   scale_fill_gradient(low = "lightgreen", high = "darkgreen") +
